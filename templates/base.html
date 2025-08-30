@@ -12,6 +12,14 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
     <div class="container-fluid">
         <a class="navbar-brand" href="#">MediaCloudUI</a>
+
+        {% if session.get('username') %}
+        <div class="navbar-nav me-auto">
+            <a class="nav-link" href="{{ url_for('streams') }}">Streams</a>
+            <a class="nav-link" href="{{ url_for('info') }}">Info</a>
+        </div>
+        {% endif %}
+
         <div class="d-flex">
             {% if session.get('username') %}
                 <span class="navbar-text me-3">Logged in as {{ session['username'] }}</span>
