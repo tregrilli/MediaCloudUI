@@ -18,7 +18,7 @@ USERS = {
 # endpoint (``/v1/stream``). We derive the base API path for other queries by
 # trimming the final path component and ensuring it ends with ``/`` so that
 # further paths can be appended safely.
-OME_STREAM_URL = os.environ.get('OME_API_URL', 'http://localhost:8081/v1/stream')
+OME_STREAM_URL = os.environ.get('OME_API_URL', 'http://ome.northeurope.cloudapp.azure.com:8081/v1/')
 OME_API_BASE = OME_STREAM_URL.rsplit('/', 1)[0].rstrip('/') + '/'
 OME_API_USER = os.environ.get('OME_API_USER', 'user')
 OME_API_PASS = os.environ.get('OME_API_PASS', 'pass')
@@ -133,25 +133,38 @@ def fetch_streams():
         if VERBOSE_DEBUG:
             log.debug("Raw stream payload (truncated 500 chars): %s", raw_text[:500])
         try:
-            data = response.json()
+            raw = response.json()
         except Exception:
             log.error("Failed parsing JSON for streams")
             if VERBOSE_DEBUG:
                 log.debug("Offending text: %s", raw_text)
             raise
 
-        data = data.get('response', data)
-        raw_streams = data.get('streams', data if isinstance(data, list) else [])
+        # Normalize payload
+        payload = raw.get('response', raw) if isinstance(raw, dict) else raw
+
+        if isinstance(payload, dict):
+            # Typical structure: {'streams': [...]}
+            candidate = payload.get('streams')
+            raw_streams = candidate if isinstance(candidate, list) else []
+        elif isinstance(payload, list):
+            # Already a list
+            raw_streams = payload
+        else:
+            raw_streams = []
+
         streams = []
         for idx, item in enumerate(raw_streams):
             if isinstance(item, dict):
                 name = item.get('name') or item.get('id') or f'stream{idx}'
             else:
-                name = item
+                name = str(item)
             url = f"{OME_WEBRTC_BASE}{OME_APP}/{name}"
             streams.append({'name': name, 'url': url})
 
-        if VERBOSE_DEBUG:
+        if not streams and VERBOSE_DEBUG:
+            log.debug("No streams available (0 discovered).")
+        elif VERBOSE_DEBUG:
             log.debug("Discovered %d streams: %s", len(streams), [s['name'] for s in streams])
         return streams
     except Exception as e:
@@ -217,9 +230,10 @@ def fetch_stream_connections():
 def streams():
     """Display available streams using OvenPlayer."""
     stream_list = fetch_streams()
+    empty_message = "0 stream available" if not stream_list else None
     if VERBOSE_DEBUG:
         log.debug("Rendering /streams with %d entries", len(stream_list))
-    return render_template('streams.html', streams=stream_list)
+    return render_template('streams.html', streams=stream_list, empty_message=empty_message)
 
 @app.route('/info')
 @login_required
