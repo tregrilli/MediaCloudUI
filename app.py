@@ -11,8 +11,11 @@ USERS = {
     'admin': 'password'
 }
 
-# Base URL for OME API to fetch available streams
+# Base URL and credentials for OME API
 OME_API_URL = os.environ.get('OME_API_URL', 'http://localhost:8081/v1/stream')
+OME_API_USER = os.environ.get('OME_API_USER', 'user')
+OME_API_PASS = os.environ.get('OME_API_PASS', 'pass')
+
 
 def login_required(f):
     """Decorator to ensure routes require authentication."""
@@ -46,7 +49,9 @@ def logout():
 def fetch_streams():
     """Retrieve stream information from OME API."""
     try:
-        response = requests.get(OME_API_URL, timeout=3)
+
+        response = requests.get(OME_API_URL, timeout=3, auth=(OME_API_USER, OME_API_PASS))
+
         response.raise_for_status()
         data = response.json()
         streams = []
