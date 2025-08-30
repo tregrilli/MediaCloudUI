@@ -122,6 +122,7 @@ def fetch_streams():
     """Retrieve stream information from OME API."""
     try:
         pub_url = f"{OME_API_BASE}vhosts/{OME_VHOST}/apps/{OME_APP}/streams"
+
         if VERBOSE_DEBUG:
             log.debug("Fetching streams from %s authUser=%s", pub_url, OME_API_USER)
         response = requests.get(pub_url, timeout=5, auth=(OME_API_USER, OME_API_PASS))
@@ -164,6 +165,7 @@ def fetch_system_info():
     """Return application-level statistics from OME."""
     try:
         url = f"{OME_API_BASE}stats/current/vhosts/{OME_VHOST}/apps/{OME_APP}"
+
         if VERBOSE_DEBUG:
             log.debug("Fetching system info from %s", url)
         response = requests.get(url, timeout=5, auth=(OME_API_USER, OME_API_PASS))
@@ -194,6 +196,7 @@ def fetch_stream_connections():
     for name in names:
         try:
             url = f"{OME_API_BASE}stats/current/vhosts/{OME_VHOST}/apps/{OME_APP}/streams/{name}"
+
             if VERBOSE_DEBUG:
                 log.debug("Fetching stream stats from %s", url)
             resp = requests.get(url, timeout=5, auth=(OME_API_USER, OME_API_PASS))

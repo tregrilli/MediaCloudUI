@@ -27,6 +27,7 @@ to query additional resources such as:
 `wss://host:port/<app>/<stream>` for OvenPlayer.
 
 
+
 ## Pages
 
 - `/streams` – lists discovered streams and plays them via OvenPlayer.
