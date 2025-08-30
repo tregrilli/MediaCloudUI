@@ -21,26 +21,7 @@
         <div class="card mb-3">
             <div class="card-header">{{ name }}</div>
             <div class="card-body">
-                <h5>Inputs</h5>
-                {% if info.in %}
-                    <ul class="list-unstyled">
-                    {% for item in info.in %}
-                        <li><pre>{{ item | tojson(indent=2) }}</pre></li>
-                    {% endfor %}
-                    </ul>
-                {% else %}
-                    <p class="text-muted">No inputs</p>
-                {% endif %}
-                <h5 class="mt-3">Outputs</h5>
-                {% if info.out %}
-                    <ul class="list-unstyled">
-                    {% for item in info.out %}
-                        <li><pre>{{ item | tojson(indent=2) }}</pre></li>
-                    {% endfor %}
-                    </ul>
-                {% else %}
-                    <p class="text-muted">No outputs</p>
-                {% endif %}
+                <pre>{{ info | tojson(indent=2) }}</pre>
             </div>
         </div>
         {% endfor %}
