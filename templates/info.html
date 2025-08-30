@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}Info - MediaCloudUI{% endblock %}
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">General Information</h2>
+    {% if system %}
+    <table class="table table-sm">
+        <tbody>
+        {% for key, value in system.items() %}
+            <tr><th>{{ key }}</th><td>{{ value }}</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No system information available.</p>
+    {% endif %}
+
+    <h2 class="mt-5 mb-4">Stream Connections</h2>
+    {% if streams %}
+        {% for name, info in streams.items() %}
+        <div class="card mb-3">
+            <div class="card-header">{{ name }}</div>
+            <div class="card-body">
+                <h5>Inputs</h5>
+                {% if info.in %}
+                    <ul class="list-unstyled">
+                    {% for item in info.in %}
+                        <li><pre>{{ item | tojson(indent=2) }}</pre></li>
+                    {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted">No inputs</p>
+                {% endif %}
+                <h5 class="mt-3">Outputs</h5>
+                {% if info.out %}
+                    <ul class="list-unstyled">
+                    {% for item in info.out %}
+                        <li><pre>{{ item | tojson(indent=2) }}</pre></li>
+                    {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted">No outputs</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p>No stream connection information available.</p>
+    {% endif %}
+</div>
+{% endblock %}
