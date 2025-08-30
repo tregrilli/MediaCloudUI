@@ -22,6 +22,15 @@ OME_STREAM_URL = os.environ.get('OME_API_URL', 'http://localhost:8081/v1/stream'
 OME_API_BASE = OME_STREAM_URL.rsplit('/', 1)[0].rstrip('/') + '/'
 OME_API_USER = os.environ.get('OME_API_USER', 'user')
 OME_API_PASS = os.environ.get('OME_API_PASS', 'pass')
+OME_VHOST = os.environ.get('OME_VHOST', 'default')
+OME_APP = os.environ.get('OME_APP', 'app')
+
+# Base for composing WebRTC playback URLs
+from urllib.parse import urlparse
+_parsed = urlparse(OME_STREAM_URL)
+_default_host = _parsed.hostname or 'localhost'
+OME_WEBRTC_BASE = os.environ.get('OME_WEBRTC_BASE', f"wss://{_default_host}:3334/")
+OME_WEBRTC_BASE = OME_WEBRTC_BASE.rstrip('/') + '/'
 
 # ---------- Verbose Debug / Logging Setup ----------
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "DEBUG").upper()
@@ -112,7 +121,8 @@ def logout():
 def fetch_streams():
     """Retrieve stream information from OME API."""
     try:
-        pub_url = f"{OME_API_BASE}vhosts/default/apps/app/streams"
+        pub_url = f"{OME_API_BASE}vhosts/{OME_VHOST}/apps/{OME_APP}/streams"
+
         if VERBOSE_DEBUG:
             log.debug("Fetching streams from %s authUser=%s", pub_url, OME_API_USER)
         response = requests.get(pub_url, timeout=5, auth=(OME_API_USER, OME_API_PASS))
@@ -129,24 +139,18 @@ def fetch_streams():
             if VERBOSE_DEBUG:
                 log.debug("Offending text: %s", raw_text)
             raise
+
+        data = data.get('response', data)
+        raw_streams = data.get('streams', data if isinstance(data, list) else [])
         streams = []
-        # Expecting data either as list of streams or dict containing 'streams'
-        if isinstance(data, list):
-            for idx, item in enumerate(data):
-                if VERBOSE_DEBUG:
-                    log.debug("Stream list item[%d] keys=%s", idx, list(item.keys()))
-                streams.append({
-                    'name': item.get('name', f'stream{idx}'),
-                    'url': item.get('playUrl')
-                })
-        elif isinstance(data, dict) and 'streams' in data:
-            for item in data.get('streams', []):
-                if VERBOSE_DEBUG:
-                    log.debug("Stream dict entry keys=%s", list(item.keys()))
-                streams.append({
-                    'name': item.get('name', item.get('id')), 
-                    'url': item.get('playUrl')
-                })
+        for idx, item in enumerate(raw_streams):
+            if isinstance(item, dict):
+                name = item.get('name') or item.get('id') or f'stream{idx}'
+            else:
+                name = item
+            url = f"{OME_WEBRTC_BASE}{OME_APP}/{name}"
+            streams.append({'name': name, 'url': url})
+
         if VERBOSE_DEBUG:
             log.debug("Discovered %d streams: %s", len(streams), [s['name'] for s in streams])
         return streams
@@ -160,7 +164,8 @@ def fetch_streams():
 def fetch_system_info():
     """Return application-level statistics from OME."""
     try:
-        url = f"{OME_API_BASE}stats/current/vhosts/default/apps/app"
+        url = f"{OME_API_BASE}stats/current/vhosts/{OME_VHOST}/apps/{OME_APP}"
+
         if VERBOSE_DEBUG:
             log.debug("Fetching system info from %s", url)
         response = requests.get(url, timeout=5, auth=(OME_API_USER, OME_API_PASS))
@@ -190,7 +195,8 @@ def fetch_stream_connections():
     names = [s['name'] for s in fetch_streams()]
     for name in names:
         try:
-            url = f"{OME_API_BASE}stats/current/vhosts/default/apps/app/streams/{name}"
+            url = f"{OME_API_BASE}stats/current/vhosts/{OME_VHOST}/apps/{OME_APP}/streams/{name}"
+
             if VERBOSE_DEBUG:
                 log.debug("Fetching stream stats from %s", url)
             resp = requests.get(url, timeout=5, auth=(OME_API_USER, OME_API_PASS))
@@ -228,6 +234,14 @@ def info():
     return render_template('info.html', system=system_info, streams=stream_info)
 
 if __name__ == '__main__':
-    log.info("Starting Flask app with OME_STREAM_URL=%s OME_API_BASE=%s user=%s pass=%s",
-             OME_STREAM_URL, OME_API_BASE, OME_API_USER, _mask(OME_API_PASS))
+    log.info(
+        "Starting Flask app with OME_STREAM_URL=%s OME_API_BASE=%s user=%s pass=%s vhost=%s app=%s webrtc=%s",
+        OME_STREAM_URL,
+        OME_API_BASE,
+        OME_API_USER,
+        _mask(OME_API_PASS),
+        OME_VHOST,
+        OME_APP,
+        OME_WEBRTC_BASE,
+    )
     app.run(debug=True, host="0.0.0.0")
