@@ -114,7 +114,7 @@ def fetch_streams():
     try:
         pub_url = f"{OME_API_BASE}vhosts/default/apps/app/streams"
         if VERBOSE_DEBUG:
-            log.debug(f"Fetching streams from %s authUser=%s", OME_STREAM_URL, OME_API_USER)
+            log.debug("Fetching streams from %s authUser=%s", pub_url, OME_API_USER)
         response = requests.get(pub_url, timeout=5, auth=(OME_API_USER, OME_API_PASS))
         if VERBOSE_DEBUG:
             log.debug("Streams response status=%s headers=%s", response.status_code, dict(response.headers))
