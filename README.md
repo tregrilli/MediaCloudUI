@@ -14,8 +14,10 @@ their defaults:
 These values correspond to the `<AccessToken>` configured in OME's
 `Server.xml`.
 
+
 ## Pages
 
 - `/streams` – lists discovered streams and plays them via OvenPlayer.
 - `/info` – shows general OME system data and per-stream publisher/subscriber
   details.
+

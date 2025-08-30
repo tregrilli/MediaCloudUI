@@ -12,6 +12,7 @@ USERS = {
 }
 
 # Base URL and credentials for OME API
+b
 # The environment variable `OME_API_URL` should point to the stream discovery
 # endpoint (``/v1/stream``). We derive the base API path for other queries by
 # trimming the final path component.
@@ -19,6 +20,7 @@ OME_STREAM_URL = os.environ.get('OME_API_URL', 'http://localhost:8081/v1/stream'
 OME_API_BASE = OME_STREAM_URL.rsplit('/', 1)[0]
 OME_API_USER = os.environ.get('OME_API_USER', 'user')
 OME_API_PASS = os.environ.get('OME_API_PASS', 'pass')
+
 
 def login_required(f):
     """Decorator to ensure routes require authentication."""
@@ -52,7 +54,9 @@ def logout():
 def fetch_streams():
     """Retrieve stream information from OME API."""
     try:
+
         response = requests.get(OME_STREAM_URL, timeout=3, auth=(OME_API_USER, OME_API_PASS))
+
         response.raise_for_status()
         data = response.json()
         streams = []
@@ -73,6 +77,7 @@ def fetch_streams():
     except Exception:
         # On failure return empty list (could log error in real application)
         return []
+
 
 def fetch_system_info():
     """Return general system information from OME."""
@@ -116,12 +121,14 @@ def fetch_stream_connections():
         pass
     return streams
 
+
 @app.route('/streams')
 @login_required
 def streams():
     """Display available streams using OvenPlayer."""
     stream_list = fetch_streams()
     return render_template('streams.html', streams=stream_list)
+
 
 @app.route('/info')
 @login_required
@@ -130,6 +137,7 @@ def info():
     system_info = fetch_system_info()
     stream_info = fetch_stream_connections()
     return render_template('info.html', system=system_info, streams=stream_info)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
