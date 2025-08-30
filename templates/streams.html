@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Streams - MediaCloudUI{% endblock %}
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">Available Streams</h2>
+    <div class="row">
+        {% for stream in streams %}
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ stream.name }}</h5>
+                    <div id="player-{{ loop.index }}" style="width:100%;height:360px;"></div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <p>No streams available.</p>
+        {% endfor %}
+    </div>
+</div>
+<script>
+{% for stream in streams %}
+OvenPlayer.create('player-{{ loop.index }}', {
+    sources: [{type: 'webrtc', file: '{{ stream.url }}'}]
+});
+{% endfor %}
+</script>
+{% endblock %}
